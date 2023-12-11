@@ -1,4 +1,4 @@
-# Audify - An AudioBook App
+# Audify - An AudioBook Streaming Application
 
 Welcome to the Audify repository! This repository contains a JavaScript application for mobile devices built using React Native. This README provides instructions on how to set up the development environment and run the application.
 
