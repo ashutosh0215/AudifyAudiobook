@@ -1,5 +1,5 @@
 import React, { useState , useEffect } from 'react';
-import { Button, ScrollView, Image, View, Text, StyleSheet } from 'react-native';
+import { Button, ScrollView, Image, View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 //importing Audio from expo-av library
@@ -16,9 +16,22 @@ const AudioBook = ({ route }) =>{
 	//const { bookName } = route.params;
 	const navigation = useNavigation();
 	const { authorName, link, bookName, bookimgURL } = route.params;
-	console.log(authorName);
+	//console.log(bookName);
+	const [bookDesc, setBookDesc] = useState('');
+
 	const [chapterList, setChapterList] = useState([]);
 	const [sound, setSound] = useState();
+	const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+	const navigateToAudioPlayer = (chapterUrl) => {
+		navigation.navigate('AudioPlayer',{
+			chapterUrl,
+			bookName,
+			bookImage : bookimgURL,
+		});
+	};
+
+
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -31,9 +44,16 @@ const AudioBook = ({ route }) =>{
 
 	const chapList = async () => {
 		try {
-      		const response = await axios.post(`http://192.168.1.10:5000/api/receivelink`, link);
-      		setChapterList(response.data)
-      		console.log(response.data)
+					const requestData = {
+						bookName: bookName,
+						authorName: authorName,
+						link: link,
+					};
+      		const response = await axios.post(`http://192.168.1.4:5000/api/receivelink`, requestData);
+      		setChapterList(response.data.linksarr);
+      		setBookDesc(response.data.book_desc);
+      		//console.log(response.data.book_desc);
+      		//console.log(response.data);
       		console.log("\n"+'New Response from Flask received');
       		// console.log(response.data)
     	} 
@@ -78,43 +98,80 @@ const AudioBook = ({ route }) =>{
 		: undefined;
 	}, [sound]);
 
+	const toggleDescription = () => {
+		setIsDescExpanded(!isDescExpanded);
+	};
+
+	const renderChapterItem = ({ item, index }) => (
+    <TouchableOpacity
+      style={styles.chapterItem}
+      onPress={() => navigateToAudioPlayer(item)}
+    >
+      <Text style={styles.chapterText}>{`Chapter ${index + 1}`}</Text>
+    </TouchableOpacity>
+  );
+
 
 	return(
-		<ScrollView contentContainerStyle={styles.container}>
-					<Image source = {{ uri: bookimgURL}} style = {styles.bookImage} />
-					<Text style={styles.bookTitle}>{bookName}-{authorName}</Text>
-      		<ScrollView contentContainerStyle={styles.chapterlist}>
-      		{chapterList.map((chapter, index) => (
-       		 <Button title={`Chapter ${index+1}`} key={index} onPress={()=>playSound(chapter)}/>
-      		))}
-      		</ScrollView>
-    	</ScrollView>
+		<View style={styles.container}>
+      <FlatList
+        ListHeaderComponent={() => (
+          <>
+            <Image source={{ uri: bookimgURL }} style={styles.bookImage} />
+            <Text style={styles.bookTitle}>{bookName}-{authorName}</Text>
+            <TouchableOpacity onPress={toggleDescription}>
+              <Text
+                style={[
+                  styles.content,
+                  !isDescExpanded && styles.collapsedContent,
+                  isDescExpanded && styles.expandedContent,
+                ]}
+                numberOfLines={isDescExpanded ? undefined : 3}
+              >
+                {bookDesc}
+                {!isDescExpanded && (
+                  <Text style={styles.toggleText}>
+                    {'Read More'}
+                  </Text>
+                )}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+        data={chapterList}
+        renderItem={renderChapterItem}
+        keyExtractor={(item, index) => `${index}`}
+        contentContainerStyle={styles.chapterList}
+      />
+    </View>	
 	);
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Take up all available space
+    flex : 1,// Take up all available space
     padding: 20, // Add padding around the content
     backgroundColor: '#040404', // Set a background color
   },
-  chapterlist: {
-    marginLeft : 5,
+  chapterList: {
     marginTop: 20,
-  },
-  content: {
-    color: '#f0f0f0',
-    alignSelf: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10, // Add some bottom margin to separate the chapters
   },
   bookTitle: {
     textAlign : 'center',
     color : '#f0f0f0',
     alignSelf : 'center',
-    fontSize : 20,
+    fontSize : 25,
     fontWeight: 'bold',
+  },
+  content: {
+    color: '#f0f0f0',
+    textAlign : 'justify',
+    alignSelf: 'center',
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  expandedContent: {
+    fontStyle: 'italic',
   },
   bookImage: {
     borderRadius : 10,
@@ -123,6 +180,28 @@ const styles = StyleSheet.create({
     height: 200, // Adjust the height as needed
     resizeMode: 'cover', // Image resizing mode
     marginBottom: 10, // Adjust margin as needed
+  },
+  chapterButton: {
+    backgroundColor: '#6699CC', // Background color
+    color: '#f0f0f0', // Text color
+    fontSize: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  chapterItem: {
+    backgroundColor: '#6699CC',
+    borderRadius: 8,
+    padding: 10,
+    marginVertical: 5,
+    alignItems: 'center',
+  },
+  chapterText: {
+    color: '#f0f0f0',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

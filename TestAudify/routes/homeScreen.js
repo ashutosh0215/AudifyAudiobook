@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, ScrollView, Image, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, ScrollView, Image, View, Text, StyleSheet, ImageBackground } from 'react-native';
 import SearchBar from './SearchBar';
 import axios from 'axios'; // Import the axios library
 import {Linking} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AudioBook from './Audiobook';
-
+import { Block, Card, Icon, Input } from 'galio-framework';
 
 
 
@@ -20,7 +20,7 @@ const HomeScreen = () => {
 //asynchronous function that handles user text
   const handleSearch = async searchText => {
     try {
-      const response = await axios.get(`http://192.168.1.10:5000/api/search?name=${searchText}`);
+      const response = await axios.get(`http://192.168.1.4:5000/api/search?name=${searchText}`);
       setBookList(response.data); // Update the bookList state with the response data
       console.log(bookList);
     } catch (error) {
@@ -38,7 +38,7 @@ const HomeScreen = () => {
     const bookName = book[0];
     const bookimgURL = book[4];
     //console.log(bookName);
-    navigation.navigate("AudioBook", { authorName,link, bookName, bookimgURL });
+    navigation.navigate("AudioBook", { authorName, link, bookName, bookimgURL });
   };
 
   // function audiobookChapters(){
@@ -50,26 +50,44 @@ const HomeScreen = () => {
   //     return audiobookChapters;
   //   },[chapterList]);
 
+  // const titleStyle = {
+  //   color: 'white',
+  //   textAlign: 'center',
+  //   fontSize: 10,
+  //   fontWeight: 'bold',
+  //   marginBottom: 10,
+  //   backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  //   paddingHorizontal: 10,
+  //   paddingVertical: 5,
+  // };
 
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <SearchBar onSearch={handleSearch} /><Text>{"\n"}</Text>
+      <Block>
+        <Input
+          placeholder="Search Books"
+          right
+          icon="search1"
+          family="antdesign"
+          iconSize={16}
+          iconColor="#666"
+          onChangeText={handleSearch}
+        />
+      </Block>
       <ScrollView style={styles.bookList}>
-        <Text style = {{fontStyle : 'italic', fontSize : 15}}>Results:</Text><Text>{"\n"}</Text>
         {bookList.map((book, index) => (
-          <View key={index} style={styles.bookItem}>
-            <TouchableOpacity onPress={()=>navigationHandler(book)}> 
-              <Image
-                source = {{ uri: book[4] }}
-                style = {styles.bookImage}
-              />
-            </TouchableOpacity>
-              <TouchableOpacity onPress={ () => Linking.openURL(book[3])}>
-                <Text style={styles.bookTitle}>{book[0]} - {book[1]}</Text>
-            </TouchableOpacity>
-            <Text>{"\n"}</Text>
-          </View>
+          <TouchableOpacity key={index} onPress={() => navigationHandler(book)}>
+            <Card
+              flex
+              borderless
+              image={`${book[4]}`}
+              style={styles.bookItem}
+            >
+            <Text style={styles.customTitle}>{book[0]}</Text> 
+              
+            </Card>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </ScrollView>
@@ -77,43 +95,47 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container:  {
-    flex: 1, // Take up all available space
-    padding: 20, // Add padding around the content
-    backgroundColor: '#040404', // Set a background color
-  },
-  title: {
-    color : '#f0f0f0',
-    textAlign : 'center',
-    marginTop : 30,
-    fontSize: 40,
-    fontWeight: 'bold',
-    marginBottom: 0,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#040404',
   },
   bookList: {
-    marginLeft : 5,
+    marginLeft: 5,
     marginTop: 20,
   },
   bookItem: {
     marginBottom: 10,
+    
   },
   bookTitle: {
-    textAlign : 'center',
-    color : '#f0f0f0',
-    alignSelf : 'center',
-    fontSize : 20,
+    textAlign: 'center',
+    color: '#f0f0f0',
+    alignSelf: 'center',
+    fontSize: 50,
     fontWeight: 'bold',
   },
-  bookLink: {
-    color: 'blue',
+  customTitle: {
+    // Add custom styles for the title
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 25,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
-  bookImage: {
-    borderRadius : 10,
-    alignSelf : 'center',
-    width: 150, // Adjust the width as needed
-    height: 200, // Adjust the height as needed
-    resizeMode: 'cover', // Image resizing mode
-    marginBottom: 10, // Adjust margin as needed
+  customCaption: {
+    // Add custom styles for the caption
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  cardImage: {
+    borderRadius: 10, // Adjust border radius of the image
+    width: '100%', // Make the image take up the full width of the block
+    height: '300', // Adjust the height as needed
+    resizeMode: 'contain',
+    overflow: 'hidden'
   },
 });
 

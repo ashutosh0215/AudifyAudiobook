@@ -22,7 +22,7 @@ def scrape_audiobook(soup):
     
     pattern = r'<h2 class="entry-title post-title"><a href="([^"]+)" rel="bookmark">([^<]+)</a></h2>'
     h2tag = soup.find_all('h2', class_='entry-title post-title')
-
+ 
     href_list = []
     title_list = []
     src_list = []
@@ -58,7 +58,7 @@ def scrape_audiobook(soup):
     searchresult = []
     for index,(bookname,author,title,href,src) in enumerate(zip(bookname_list,author_list,title_list,href_list,src_list), start=1):
         searchresult.append((bookname,author,title,href,src))
-        
+
     return searchresult
 
 
